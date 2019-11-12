@@ -9,34 +9,34 @@ export const DefaultOptions: LaunchOptions = {
   headless: true
 };
 
-export const Events = {
-  AUTHENTICATION_FAILURE: "auth_failure",
-  AUTHENTICATED: "authenticated",
-  DISCONNECTED: "disconnected",
-  MESSAGE_RECEIVED: "message",
-  QR_RECEIVED: "qr",
-  READY: "ready"
-};
-
-export const MessageTypes = {
-  DOCUMENT: "document",
-  STICKER: "sticker",
-  VIDEO: "video",
-  AUDIO: "audio",
-  IMAGE: "image",
-  VOICE: "ptt",
-  TEXT: "chat"
-};
-
-export const ChatTypes = {
-  UNKNOWN: "unknown",
-  GROUP: "group",
-  SOLO: "solo"
-};
-
 export const Selectors = {
   PHONE_CONNECTED: "._1wSzK",
   QR_CONTAINER: "._2d3Jz",
-  QR_VALUE: "._1pw2F",
-  QR_EXPIRED: "._1MOym"
+  QR_EXPIRED: "._1MOym",
+  QR_VALUE: "._1pw2F"
 };
+
+export enum Events {
+  AUTHENTICATION_FAILURE = "auth_failure",
+  AUTHENTICATED = "authenticated",
+  DISCONNECTED = "disconnected",
+  MESSAGE_RECEIVED = "message",
+  QR_RECEIVED = "qr",
+  READY = "ready"
+}
+
+export enum MessageTypes {
+  DOCUMENT = "document",
+  STICKER = "sticker",
+  VIDEO = "video",
+  AUDIO = "audio",
+  IMAGE = "image",
+  VOICE = "ptt",
+  TEXT = "chat"
+}
+
+export enum ChatTypes {
+  UNKNOWN = "unknown",
+  GROUP = "group",
+  SOLO = "solo"
+}

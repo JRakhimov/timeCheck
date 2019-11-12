@@ -16,7 +16,7 @@ export class Message implements MessageRaw {
   type: string;
   star: boolean;
   isForwarded: boolean;
-  isNewMessage: boolean;
+  isNewMsg: boolean;
 
   constructor(page: Page, messageData: MessageRaw) {
     this.page = page;
@@ -28,8 +28,22 @@ export class Message implements MessageRaw {
     this.star = messageData.star;
     this.body = messageData.body;
     this.type = messageData.type;
+    this.isNewMsg = messageData.isNewMsg;
     this.isForwarded = messageData.isForwarded;
-    this.isNewMessage = messageData.isNewMessage;
+  }
+
+  rawMessage(): MessageRaw {
+    return {
+      t: this.t,
+      id: this.id,
+      to: this.to,
+      from: this.from,
+      star: this.star,
+      body: this.body,
+      type: this.type,
+      isNewMsg: this.isNewMsg,
+      isForwarded: this.isForwarded
+    };
   }
 
   /**

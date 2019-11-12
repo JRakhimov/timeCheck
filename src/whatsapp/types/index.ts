@@ -1,8 +1,8 @@
 export type Session = {
-  WASecretBundle: string;
-  WABrowserId: string;
   WAToken1: string;
   WAToken2: string;
+  WABrowserId: string;
+  WASecretBundle: string;
 };
 
 export interface MessageRaw {
@@ -18,8 +18,8 @@ export interface MessageRaw {
   body: string;
   type: string;
   star: boolean;
+  isNewMsg: boolean;
   isForwarded: boolean;
-  isNewMessage: boolean;
 }
 
 export interface ChatRaw {
@@ -45,3 +45,56 @@ export interface ChatRaw {
   formattedTitle: string;
   muteExpiration: number;
 }
+
+export type AppState = {
+  state: State;
+  stream: Stream;
+  canSend: boolean;
+  isState: boolean;
+  launched: boolean;
+  hasSynced: boolean;
+  isIncognito: boolean;
+  lastPhoneMessage: any;
+  pendingPhoneReqs: number;
+
+  on(event: string, callback: () => void): void;
+};
+
+export enum Stream {
+  DISCONNECTED = "DISCONNECTED",
+  CONNECTED = "CONNECTED",
+  RESUMING = "RESUMING",
+  SYNCING = "SYNCING"
+}
+
+export enum State {
+  DEPRECATED_VERSION = "DEPRECATED_VERSION",
+  SMB_TOS_BLOCK = "SMB_TOS_BLOCK",
+  UNPAIRED_IDLE = "UNPAIRED_IDLE",
+  UNLAUNCHED = "UNLAUNCHED",
+  PROXYBLOCK = "PROXYBLOCK",
+  CONNECTED = "CONNECTED",
+  TOS_BLOCK = "TOS_BLOCK",
+  CONFLICT = "CONFLICT",
+  UNPAIRED = "UNPAIRED",
+  PAIRING = "PAIRING",
+  TIMEOUT = "TIMEOUT",
+  OPENING = "OPENING"
+}
+
+export type WAPI = {
+  AppState: AppState;
+  PAIRING_STATE: State;
+  CONNECTION_STREAM: Stream;
+
+  isConnected(): boolean;
+  getState(): WAPI_STATE;
+};
+
+export type WAPI_STATE = {
+  phone: string;
+  session: Session;
+  pairingState: State;
+  authRef: string | null;
+  connectionState: Stream;
+};

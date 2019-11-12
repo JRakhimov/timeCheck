@@ -1,11 +1,19 @@
+import { ChatRaw, WAPI_STATE, State, Stream, AppState } from "../../types";
+
+type StreamModule = {
+  STATE: State;
+  STREAM: Stream;
+  default: AppState;
+};
+
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
 export function exposeStoreAndWAPI(): void {
   // @ts-ignore
   const { mR } = window;
 
   const { default: Store } = mR.findModule("Chat")[1];
-  const [{ STATE, STREAM, default: AppState }] = mR.findModule("STREAM");
   const [{ sendTextMsgToChat }] = mR.findModule("sendTextMsgToChat");
+  const [{ STATE, STREAM, default: appState }]: [StreamModule] = mR.findModule("STREAM");
 
   const [{ default: MediaCollection }] = mR
     .findModule("default")
@@ -16,7 +24,7 @@ export function exposeStoreAndWAPI(): void {
     // @ts-ignore
     .filter(x => x.default.prototype && x.default.prototype.isServer && x.default.prototype.isUser != null);
   // @ts-ignore
-  const base64ImageToFile = (b64Data, filename) => {
+  const base64ImageToFile = (b64Data, filename): File => {
     const arr = b64Data.split(",");
 
     const mime = arr[0].match(/:(.*?);/)[1];
@@ -34,7 +42,7 @@ export function exposeStoreAndWAPI(): void {
     return new File([u8arr], filename, { type: mime });
   };
 
-  const getChatModel = (chat: any) => {
+  const getChatModel = (chat: any): ChatRaw => {
     const res = chat.serialize();
 
     res.isGroup = chat.isGroup;
@@ -47,7 +55,7 @@ export function exposeStoreAndWAPI(): void {
     return res;
   };
 
-  const getChat = (chatId: string) => {
+  const getChat = (chatId: string): ChatRaw => {
     const chat = Store.Chat.get(chatId);
 
     return getChatModel(chat);
@@ -64,28 +72,30 @@ export function exposeStoreAndWAPI(): void {
       base64ImageToFile
     },
     WAPI: {
-      AppState,
+      AppState: appState,
       PAIRING_STATE: STATE,
       CONNECTION_STREAM: STREAM,
 
-      isConnected: (): boolean => AppState.stream === "CONNECTED",
-      getState: () => {
-        const { state, stream } = AppState;
+      isConnected(): boolean {
+        return appState.stream === "CONNECTED";
+      },
+      getState(): WAPI_STATE {
+        const { state, stream } = appState;
 
         const [me] = Store.Status.models;
 
         const qrNode = document.querySelector("div[data-ref]");
 
         return {
+          phone: me.id.user,
           pairingState: state,
           connectionState: stream,
-          phone: me.id.user,
-          authRef: !qrNode ? undefined : qrNode.getAttribute("data-ref"),
+          authRef: !qrNode ? null : qrNode.getAttribute("data-ref"),
           session: {
-            WAToken1: localStorage.getItem("WAToken1"),
-            WAToken2: localStorage.getItem("WAToken2"),
-            WABrowserId: localStorage.getItem("WABrowserId"),
-            WASecretBundle: localStorage.getItem("WASecretBundle")
+            WAToken1: localStorage.getItem("WAToken1") || "",
+            WAToken2: localStorage.getItem("WAToken2") || "",
+            WABrowserId: localStorage.getItem("WABrowserId") || "",
+            WASecretBundle: localStorage.getItem("WASecretBundle") || ""
           }
         };
       }

@@ -39,16 +39,19 @@ export class Chat implements ChatRaw {
     this.lastReceivedKey = chatData.lastReceivedKey;
   }
 
-  async sendMessage(chatID: string, message: string) {
+  async sendMessage(message: string): Promise<string> {
+    const chatID = this.id._serialized;
+
+    return this.page.evaluate(
+      // @ts-ignore
+      (chatID, message) => Store.sendTextMsgToChat(Store.Chat.get(chatID), message),
+      chatID,
+      message
+    );
+  }
+
+  getMe(): Promise<string> {
     // @ts-ignore
-    return this.page.evaluate((chatID, message) => Store.SendMessage(Store.Chat.get(chatID), message), chatID, message);
+    return this.page.evaluate(() => WAPI.getState().phone);
   }
-
-  async reply(message: string) {
-    return this.sendMessage(this.id._serialized, message);
-  }
-
-  // getMe() {
-  //   return this.page.getMe();
-  // }
 }

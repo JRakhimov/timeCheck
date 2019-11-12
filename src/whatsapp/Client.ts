@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/ban-ts-ignore */
 import EventEmitter from "events";
 import puppeteer, { LaunchOptions, Browser, Page } from "puppeteer-core";
 
 import { Logger } from "../utils";
 import { Constants, exposeStoreAndWAPI } from "./utils";
 
-import { Session } from "./types";
+import { Session, MessageRaw, WAPI, AppState } from "./types";
 import { Message } from "./structures";
 
 export class Client extends EventEmitter {
@@ -25,8 +26,6 @@ export class Client extends EventEmitter {
     log.info("Opening browser...");
     this.pupBrowser = await puppeteer.launch(this.options);
     log.info("Browser opened </>");
-
-    console.log("session :", session);
 
     this.newPage(session);
   }
@@ -95,46 +94,38 @@ export class Client extends EventEmitter {
 
       this.emit(Constants.Events.AUTHENTICATED, newSession);
 
-      await page.exposeFunction("onAddMessageEvent", async messageRaw => {
+      await page.exposeFunction("onAddMessageEvent", async (messageRaw: MessageRaw) => {
         if (messageRaw.id.fromMe || !messageRaw.isNewMsg) {
           return;
         }
 
-        const message = new Message(page, messageRaw);
-        const chat = await message.getChat();
-
-        this.emit(Constants.Events.MESSAGE_RECEIVED, { message, chat });
+        this.emit(Constants.Events.MESSAGE_RECEIVED, new Message(page, messageRaw));
       });
 
-      await page.exposeFunction("onConnectionChangedEvent", async (Constatns, AppState) => {
-        const { CONNECTION_STREAM, PAIRING_STATE } = Constatns;
+      await page.exposeFunction("onConnectionChangedEvent", async (_Constants, AppState: AppState) => {
+        // const { CONNECTION_STREAM, PAIRING_STATE } = Constants;
         const { stream, state } = AppState;
-
-        console.log("CONNECTION_STREAM :", CONNECTION_STREAM);
-        console.log("PAIRING_STATE :", PAIRING_STATE);
 
         console.log("stream :", stream);
         console.log("state :", state);
-
-        // console.log("stream :", stream);
-        // console.log("state :", state);
-
         // if (stream === CONNECTION_STREAM.DISCONNECTED || state === PAIRING_STATE.DISCONNECTED) {
         //   return this.emit(Events.DISCONNECTED, new Context(pageName));
         // }
       });
 
       await page.evaluate(() => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        const { PAIRING_STATE, CONNECTION_STREAM, AppState } = window.WAPI as WAPI;
+
         // @ts-ignore
         Store.Msg.on("add", onAddMessageEvent);
 
-        // const { PAIRING_STATE, CONNECTION_STREAM, AppState } = window.WAPI;
-        // AppState.on("change:state change:stream", () => {
-        //   const { state, stream } = AppState;
+        AppState.on("change:state change:stream", () => {
+          const { state, stream } = AppState;
 
-        //   onConnectionChangedEvent({ PAIRING_STATE, CONNECTION_STREAM }, { state, stream });
-        // });
+          // @ts-ignore
+          onConnectionChangedEvent({ PAIRING_STATE, CONNECTION_STREAM }, { state, stream });
+        });
       });
 
       this.emit(Constants.Events.READY);

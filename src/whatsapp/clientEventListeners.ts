@@ -2,8 +2,9 @@ import { Constants } from "./utils";
 import { Client } from "./Client";
 import { Session } from "./types";
 
-const { QR_RECEIVED, AUTHENTICATION_FAILURE, AUTHENTICATED, READY } = Constants.Events;
+const { QR_RECEIVED, AUTHENTICATION_FAILURE, AUTHENTICATED, MESSAGE_RECEIVED, READY } = Constants.Events;
 import { Logger, firebase } from "../utils";
+import { Message } from "./structures";
 
 export default (client: Client): void => {
   client.on(QR_RECEIVED, (qrCode: string) => {
@@ -29,9 +30,15 @@ export default (client: Client): void => {
       .update({ ...session });
   });
 
-  // client.on(MESSAGE_RECEIVED, (ctx) => {
+  client.on(MESSAGE_RECEIVED, async (message: Message) => {
+    const log = Logger("Event:MESSAGE_RECEIVED");
 
-  // });
+    log.info(message.rawMessage());
+
+    const chat = await message.getChat();
+
+    console.log(await chat.sendMessage("Hi"));
+  });
 
   // client.on(DISCONNECTED, disconnectedController(strapi, bot));
 
