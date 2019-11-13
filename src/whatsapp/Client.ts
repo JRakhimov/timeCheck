@@ -103,14 +103,12 @@ export class Client extends EventEmitter {
       });
 
       await page.exposeFunction("onConnectionChangedEvent", async (_Constants, AppState: AppState) => {
-        // const { CONNECTION_STREAM, PAIRING_STATE } = Constants;
+        const { CONNECTION_STREAM, PAIRING_STATE } = _Constants;
         const { stream, state } = AppState;
 
-        console.log("stream :", stream);
-        console.log("state :", state);
-        // if (stream === CONNECTION_STREAM.DISCONNECTED || state === PAIRING_STATE.DISCONNECTED) {
-        //   return this.emit(Events.DISCONNECTED, new Context(pageName));
-        // }
+        if (stream === CONNECTION_STREAM.DISCONNECTED || state === PAIRING_STATE.DISCONNECTED) {
+          this.emit(Constants.Events.DISCONNECTED, { stream, state });
+        }
       });
 
       await page.evaluate(() => {
@@ -134,5 +132,23 @@ export class Client extends EventEmitter {
     } else {
       throw new Error("Browser is not launched, please call initialize() first");
     }
+  }
+
+  async sendMessage(chatID: string, message: string): Promise<void | string> {
+    if (this.pupPage) {
+      return this.pupPage.evaluate(
+        // @ts-ignore
+        (chatID, message) => Store.sendTextMsgToChat(Store.Chat.get(chatID), message),
+        chatID,
+        message
+      );
+    } else {
+      throw new Error("Browser is not launched, please call initialize() first");
+    }
+  }
+
+  async clientState(): Promise<WAPI> {
+    // @ts-ignore
+    return this.pupPage.evaluate(() => window.WAPI);
   }
 }

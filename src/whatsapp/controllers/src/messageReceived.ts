@@ -9,5 +9,7 @@ export default async function(message: Message): Promise<void> {
 
   const chat = await message.getChat();
 
-  console.log(await chat.sendMessage("Hi"));
+  if (message.body.toLowerCase() === "ping") {
+    await chat.sendMessage("Pong");
+  }
 }
