@@ -4,44 +4,61 @@ import { CronJob } from "cron";
 import { Client } from "./whatsapp/Client";
 import { Logger, firebase } from "./utils";
 
-const accountRegEx = /^[0-9]{0,}@c.us$/;
+const accountRegEx = /^[0-9]{0,}$/;
 
-export const cronJob = (
-  whatsAppClient: Client,
-  cronTime: string,
-  accounts: Array<string>,
-  timezone = "Asia/Tashkent"
-): CronJob => {
+interface CronOptions {
+  cronTime: string;
+  timezone: string;
+}
+
+interface MessageOptions {
+  accounts: Array<string>;
+  messageText: string;
+}
+
+export const cronJob = (whatsAppClient: Client, cronOptions: CronOptions, messageOptions: MessageOptions): CronJob => {
   const onTick = async (): Promise<void> => {
     const log = Logger("CronJob");
     const moment = Moment();
 
-    moment.tz(timezone);
+    moment.tz(cronOptions.timezone);
 
     log.info(`CronJob started: ${moment.format()}`);
 
-    const wapi = await whatsAppClient.clientState();
+    if (whatsAppClient.pupPage) {
+      const isConnected = await whatsAppClient.isConnected();
 
-    if (whatsAppClient.pupPage && wapi.isConnected()) {
-      for (const account of accounts) {
-        if (accountRegEx.test(account)) {
+      for (const account of messageOptions.accounts) {
+        if (isConnected && accountRegEx.test(account)) {
           const day = moment.format("DD");
           const month = moment.format("MMMM");
           const time = moment.format("HH_mm");
 
-          const res = await whatsAppClient.sendMessage(account, "Cron test");
-          const [phone] = account.split("@c.us");
+          const res = await whatsAppClient.sendMessage([account, "@c.us"].join(""), messageOptions.messageText);
 
-          await firebase
-            .database()
-            .ref(`${month}/${day}/${time}/${phone}`)
-            .set(res);
+          if (res === "success") {
+            const timestamp = new Date().getTime();
+            const promises = [
+              firebase
+                .database()
+                .ref(`${month}/${day}/${time}/${account}`)
+                .set({
+                  sentDate: timestamp
+                }),
+              firebase
+                .database()
+                .ref(`accounts/${account}`)
+                .set({
+                  lastSentMessageDate: timestamp
+                })
+            ];
+
+            await Promise.all(promises);
+          }
         }
       }
-    } else {
-      log.info("Some error log");
     }
   };
 
-  return new CronJob(cronTime, onTick, undefined, false, timezone); // "Europe/Moscow"
+  return new CronJob(cronOptions.cronTime, onTick, undefined, false, cronOptions.timezone); // "Europe/Moscow"
 };

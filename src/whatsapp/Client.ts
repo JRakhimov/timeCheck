@@ -147,8 +147,12 @@ export class Client extends EventEmitter {
     }
   }
 
-  async clientState(): Promise<WAPI> {
-    // @ts-ignore
-    return this.pupPage.evaluate(() => window.WAPI);
+  async isConnected(): Promise<boolean> {
+    if (this.pupPage && this.pupBrowser) {
+      // @ts-ignore
+      return this.pupPage.evaluate(() => (window.WAPI as WAPI).isConnected());
+    } else {
+      throw new Error("Browser or page is not launched, please call initialize() first");
+    }
   }
 }
