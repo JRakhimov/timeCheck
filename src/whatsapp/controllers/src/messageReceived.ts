@@ -27,11 +27,10 @@ export default async function(message: Message): Promise<void> {
   const [fromAccount] = message.from.split("@c.us");
 
   if (accounts.includes(fromAccount)) {
-    const moment = Moment(message.t * 1000);
-    moment.tz(timezone);
+    const moment = Moment(message.t * 1000).tz(timezone);
 
     const { lastSentMessageDate } = db.accounts[fromAccount];
-    const messageMoment = Moment(lastSentMessageDate);
+    const messageMoment = Moment(lastSentMessageDate).tz(timezone);
 
     const ref = `statistics/${messageMoment.format("MMMM/DD/HH_mm")}/${fromAccount}`;
     const month = messageMoment.format("MMMM");
@@ -39,8 +38,9 @@ export default async function(message: Message): Promise<void> {
     const day = messageMoment.format("DD");
 
     const isAlreadyAnswered = db.statistics?.[month]?.[day]?.[time]?.[fromAccount]?.responseDate;
+    const differenceWithLastMessage = moment.diff(messageMoment, "minutes");
 
-    if (moment.diff(messageMoment, "minutes") < 15 && isAlreadyAnswered == null) {
+    if (differenceWithLastMessage < 15 && isAlreadyAnswered == null) {
       await firebase
         .database()
         .ref(ref)

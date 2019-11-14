@@ -19,13 +19,11 @@ interface MessageOptions {
 export const cronJob = (whatsAppClient: Client, cronOptions: CronOptions, messageOptions: MessageOptions): CronJob => {
   const onTick = async (): Promise<void> => {
     const log = Logger("CronJob");
-    const moment = Moment();
-
-    moment.tz(cronOptions.timezone);
-
-    log.info(`CronJob started: ${moment.format()}`);
+    const moment = Moment().tz(cronOptions.timezone);
 
     if (whatsAppClient.pupPage) {
+      log.info(`CronJob started: ${moment.format()}`);
+
       const isConnected = await whatsAppClient.isConnected();
 
       for (const account of messageOptions.accounts) {
