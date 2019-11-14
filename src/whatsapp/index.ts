@@ -2,6 +2,7 @@ import os from "os";
 
 import { Client } from "./Client";
 import { firebase } from "../utils";
+import { isDocker } from "../config";
 import clientEventListeners from "./clientEventListeners";
 
 enum chromeExecutablePathes {
@@ -11,7 +12,7 @@ enum chromeExecutablePathes {
   DOCKER_LINUX = "google-chrome-unstable"
 }
 
-export default async (): Promise<Client> => {
+export default async (headless = true): Promise<Client> => {
   const osType = os.type();
 
   const executablePath: chromeExecutablePathes =
@@ -19,14 +20,14 @@ export default async (): Promise<Client> => {
       ? chromeExecutablePathes.OSX
       : osType === "Windows_NT"
       ? chromeExecutablePathes.WINDOWS
-      : osType === "Linux" && process.env.IS_DOCKER
+      : osType === "Linux" && isDocker
       ? chromeExecutablePathes.DOCKER_LINUX
       : chromeExecutablePathes.LINUX;
 
   const puppeteerOptions = {
     args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
-    headless: false,
-    executablePath
+    executablePath,
+    headless
   };
 
   const session = await firebase

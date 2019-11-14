@@ -98,3 +98,28 @@ export type WAPI_STATE = {
   authRef: string | null;
   connectionState: Stream;
 };
+
+type Account = {
+  lastSentMessageDate: number;
+};
+
+type CronMessage = {
+  sentDate: number;
+  responseDate?: number;
+};
+
+export interface Database {
+  session: Session;
+  accounts: {
+    [key: string]: Account;
+  };
+  statistics: {
+    [key: string]: {
+      [key: string]: {
+        [key: string]: {
+          [key: string]: CronMessage;
+        };
+      };
+    };
+  };
+}

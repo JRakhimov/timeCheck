@@ -30,18 +30,15 @@ export const cronJob = (whatsAppClient: Client, cronOptions: CronOptions, messag
 
       for (const account of messageOptions.accounts) {
         if (isConnected && accountRegEx.test(account)) {
-          const day = moment.format("DD");
-          const month = moment.format("MMMM");
-          const time = moment.format("HH_mm");
-
           const res = await whatsAppClient.sendMessage([account, "@c.us"].join(""), messageOptions.messageText);
+          const ref = `statistics/${moment.format("MMMM/DD/HH_mm")}/${account}`;
 
           if (res === "success") {
             const timestamp = new Date().getTime();
             const promises = [
               firebase
                 .database()
-                .ref(`${month}/${day}/${time}/${account}`)
+                .ref(ref)
                 .set({
                   sentDate: timestamp
                 }),
@@ -60,5 +57,5 @@ export const cronJob = (whatsAppClient: Client, cronOptions: CronOptions, messag
     }
   };
 
-  return new CronJob(cronOptions.cronTime, onTick, undefined, false, cronOptions.timezone); // "Europe/Moscow"
+  return new CronJob(cronOptions.cronTime, onTick, undefined, false, cronOptions.timezone);
 };
