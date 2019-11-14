@@ -1,8 +1,8 @@
 import os from "os";
+import isDocker from "is-docker";
 
 import { Client } from "./Client";
 import { firebase } from "../utils";
-import { isDocker } from "../config";
 import clientEventListeners from "./clientEventListeners";
 
 enum chromeExecutablePathes {
@@ -20,7 +20,7 @@ export default async (headless = true): Promise<Client> => {
       ? chromeExecutablePathes.OSX
       : osType === "Windows_NT"
       ? chromeExecutablePathes.WINDOWS
-      : osType === "Linux" && isDocker
+      : osType === "Linux" && isDocker()
       ? chromeExecutablePathes.DOCKER_LINUX
       : chromeExecutablePathes.LINUX;
 
