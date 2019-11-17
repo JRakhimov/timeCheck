@@ -113,6 +113,12 @@ export interface Database {
   telegramAdmins: {
     [key: string]: number;
   };
+  qrCode?: {
+    text: string;
+    messages: {
+      [key: string]: number;
+    };
+  };
   accounts: {
     [key: string]: Account;
   };
