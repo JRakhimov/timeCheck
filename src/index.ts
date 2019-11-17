@@ -3,7 +3,7 @@ import TelegramClient from "./telegram";
 import { cronJob } from "./cron";
 
 const Main = async (): Promise<void> => {
-  const whatsAppClient = await WhatsAppClient(true);
+  const whatsAppClient = await WhatsAppClient(false);
   await TelegramClient(whatsAppClient);
 
   const cron = await cronJob(whatsAppClient, "*/30 * * * * *", "Cron test");

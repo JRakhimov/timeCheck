@@ -35,12 +35,12 @@ export class Client extends EventEmitter {
 
     if (this.pupBrowser) {
       log.info("Opening new page...");
-      const page = await this.pupBrowser.newPage();
+      this.pupPage = await this.pupBrowser.newPage();
 
-      page.setUserAgent(Constants.USER_AGENT);
+      this.pupPage.setUserAgent(Constants.USER_AGENT);
 
       if (session) {
-        await page.evaluateOnNewDocument((session: Session) => {
+        await this.pupPage.evaluateOnNewDocument((session: Session) => {
           window.localStorage.clear();
           window.localStorage.setItem("WASecretBundle", session.WASecretBundle);
           window.localStorage.setItem("WABrowserId", session.WABrowserId);
@@ -49,22 +49,23 @@ export class Client extends EventEmitter {
         }, session);
       }
 
-      await page.goto(Constants.WHATSAPP_WEB_URL, { waitUntil: "networkidle0", timeout: 0 });
+      await this.pupPage.goto(Constants.WHATSAPP_WEB_URL, { waitUntil: "networkidle0", timeout: 0 });
 
       log.info("Page opened </>");
 
       if (session) {
         // Check if session restore was successfull
         try {
-          await page.waitForSelector(Constants.Selectors.PHONE_CONNECTED, { timeout: 5000 });
+          await this.pupPage.waitForSelector(Constants.Selectors.PHONE_CONNECTED, { timeout: 5000 });
         } catch (err) {
           if (err.name === "TimeoutError") {
-            this.emit(Constants.Events.AUTHENTICATION_FAILURE, "Unable to log in. Are the session details valid?");
+            if (this.retries === 3) {
+              this.emit(Constants.Events.AUTHENTICATION_FAILURE, "Unable to log in. Are the session details valid?");
+              this.retries = 0;
+              return;
+            }
 
-            // TODO:
-            // browser.close();
-            // page.close();
-
+            // this.reload(false);
             return;
           }
 
@@ -72,19 +73,19 @@ export class Client extends EventEmitter {
         }
       } else {
         // Wait for QR Code
-        await page.waitForSelector(Constants.Selectors.QR_CONTAINER);
+        await this.pupPage.waitForSelector(Constants.Selectors.QR_CONTAINER);
 
-        const qr = await page.$eval(Constants.Selectors.QR_VALUE, node => node.getAttribute("data-ref"));
+        const qr = await this.pupPage.$eval(Constants.Selectors.QR_VALUE, node => node.getAttribute("data-ref"));
         this.emit(Constants.Events.QR_RECEIVED, qr);
 
         // Wait for code scan
-        await page.waitForSelector(Constants.Selectors.PHONE_CONNECTED, { timeout: 0 });
+        await this.pupPage.waitForSelector(Constants.Selectors.PHONE_CONNECTED, { timeout: 0 });
       }
 
-      await page.addScriptTag({ path: require.resolve("moduleraid") });
-      await page.evaluate(exposeStoreAndWAPI);
+      await this.pupPage.addScriptTag({ path: require.resolve("moduleraid") });
+      await this.pupPage.evaluate(exposeStoreAndWAPI);
 
-      const localStorage: Session = JSON.parse(await page.evaluate(() => JSON.stringify(window.localStorage)));
+      const localStorage: Session = JSON.parse(await this.pupPage.evaluate(() => JSON.stringify(window.localStorage)));
       const newSession: Session = {
         WASecretBundle: localStorage.WASecretBundle,
         WABrowserId: localStorage.WABrowserId,
@@ -94,15 +95,15 @@ export class Client extends EventEmitter {
 
       this.emit(Constants.Events.AUTHENTICATED, newSession);
 
-      await page.exposeFunction("onAddMessageEvent", async (messageRaw: MessageRaw) => {
+      await this.pupPage.exposeFunction("onAddMessageEvent", async (messageRaw: MessageRaw) => {
         if (messageRaw.id.fromMe || !messageRaw.isNewMsg) {
           return;
         }
 
-        this.emit(Constants.Events.MESSAGE_RECEIVED, new Message(page, messageRaw));
+        this.pupPage && this.emit(Constants.Events.MESSAGE_RECEIVED, new Message(this.pupPage, messageRaw));
       });
 
-      await page.exposeFunction("onConnectionChangedEvent", async (_Constants, AppState: AppState) => {
+      await this.pupPage.exposeFunction("onConnectionChangedEvent", async (_Constants, AppState: AppState) => {
         const { CONNECTION_STREAM, PAIRING_STATE } = _Constants;
         const { stream, state } = AppState;
 
@@ -111,7 +112,7 @@ export class Client extends EventEmitter {
         }
       });
 
-      await page.evaluate(() => {
+      await this.pupPage.evaluate(() => {
         // @ts-ignore
         const { PAIRING_STATE, CONNECTION_STREAM, AppState } = window.WAPI as WAPI;
 
@@ -127,11 +128,37 @@ export class Client extends EventEmitter {
       });
 
       this.emit(Constants.Events.READY);
-
-      this.pupPage = page;
     } else {
       throw new Error("Browser is not launched, please call initialize() first");
     }
+  }
+
+  async closePage(removeSession: boolean): Promise<void> {
+    const close = async (page: Page): Promise<void> => {
+      if (page && !page.isClosed()) {
+        if (removeSession) {
+          await page.evaluate(() => window.localStorage.clear());
+        }
+
+        try {
+          await page.close();
+        } catch (error) {
+          if (error.name !== "Target closed") {
+            throw new Error(error);
+          }
+        }
+      }
+    };
+
+    const pages = (await this.pupBrowser?.pages()) || [];
+
+    for (const page of pages) {
+      if (page.url() !== "about:blank") {
+        await close(page);
+      }
+    }
+
+    this.pupPage = null;
   }
 
   async sendMessage(chatID: string, message: string): Promise<void | string> {

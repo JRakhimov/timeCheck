@@ -10,7 +10,11 @@ export const authenticated = (telegramClient: Telegraf<ContextMessageUpdate>) =>
   const admins = Object.values(db?.telegramAdmins || {});
   const telegramMessages = db?.qrCode?.messages;
 
-  fs.unlinkSync(path.join(root.toString(), "./resources/qr.png"));
+  const file = path.join(root.toString(), "./resources/qr.png");
+
+  if (fs.existsSync(file)) {
+    fs.unlinkSync(file);
+  }
 
   await firebase
     .database()

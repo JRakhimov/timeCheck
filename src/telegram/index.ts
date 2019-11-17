@@ -2,26 +2,29 @@ import Telegraf, { Composer, ContextMessageUpdate } from "telegraf";
 
 import { Client } from "../whatsapp/Client";
 import { token, env } from "../config";
-// import { Logger } from "../utils";
+import { Logger } from "../utils";
 
 import { isAdmin } from "./middlewares";
-import { start, status } from "./contollers";
+import { start, status, regenerate } from "./contollers";
 import whatsAppClientEventListeners from "./whatsAppClientEventListeners";
 
 export default async (whatsAppClient: Client): Promise<Composer<ContextMessageUpdate>> => {
   if (token) {
     const bot = new Telegraf(token, { telegram: { webhookReply: false } });
-    // const log = Logger("Telegram:Main");
+    const log = Logger("Telegram:Main");
 
     bot.use(isAdmin);
     bot.start(start);
     bot.command("status", status(whatsAppClient));
+    bot.command("regenerate", regenerate(whatsAppClient));
 
     whatsAppClientEventListeners(whatsAppClient, bot);
 
     if (env === "development") {
       await bot.telegram.deleteWebhook();
       await bot.startPolling();
+
+      log.info(".::Telegram client started via Polling::.");
     }
 
     return bot;
