@@ -110,6 +110,9 @@ type CronMessage = {
 
 export interface Database {
   session: Session;
+  telegramAdmins: {
+    [key: string]: number;
+  };
   accounts: {
     [key: string]: Account;
   };

@@ -1,5 +1,5 @@
 import { Events } from "../../utils/src/Constants";
-import { Logger, firebase } from "../../../utils";
+import { Logger, firebase, dbSnapshot } from "../../../utils";
 import { Message } from "../../structures";
 import { timezone } from "../../../config";
 import { Database } from "../../types";
@@ -17,11 +17,7 @@ export default async function(message: Message): Promise<void> {
     await chat.sendMessage("Pong");
   }
 
-  const db: Database = await firebase
-    .database()
-    .ref()
-    .once("value")
-    .then(x => x.val());
+  const db: Database = await dbSnapshot();
 
   const accounts = db.accounts ? Object.keys(db.accounts) : [];
   const [fromAccount] = message.from.split("@c.us");

@@ -1,4 +1,4 @@
 import { Logger } from "./src/Logger";
-import { firebase } from "./src/Firebase";
+import { firebase, dbSnapshot } from "./src/Firebase";
 
-export { Logger, firebase };
+export { Logger, firebase, dbSnapshot };
