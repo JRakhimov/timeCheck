@@ -6,6 +6,6 @@ export const authenticated = (telegramClient: Telegraf<ContextMessageUpdate>) =>
   const admins = Object.values(db?.telegramAdmins || {});
 
   for (const admin of admins) {
-    await telegramClient.telegram.sendMessage(admin, "Authenticated.");
+    await telegramClient.telegram.sendMessage(admin, "Session restored and updated.");
   }
 };

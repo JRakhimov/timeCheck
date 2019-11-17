@@ -1,15 +1,8 @@
-import readyController from "./src/ready";
-import qrReceivedController from "./src/qrReceived";
-import authFailureController from "./src/authFailure";
-import disconnectedController from "./src/disconnected";
-import authenticatedController from "./src/authenticated";
-import messageReceivedController from "./src/messageReceived";
+import { ready } from "./src/ready";
+import { qrReceived } from "./src/qrReceived";
+import { authFailure } from "./src/authFailure";
+import { disconnected } from "./src/disconnected";
+import { authenticated } from "./src/authenticated";
+import { messageReceived } from "./src/messageReceived";
 
-export {
-  readyController,
-  qrReceivedController,
-  authFailureController,
-  disconnectedController,
-  authenticatedController,
-  messageReceivedController
-};
+export { ready, qrReceived, authFailure, disconnected, authenticated, messageReceived };

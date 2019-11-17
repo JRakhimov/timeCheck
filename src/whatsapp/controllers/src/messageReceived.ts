@@ -1,12 +1,12 @@
-import { Events } from "../../utils/src/Constants";
+import Moment from "moment-timezone";
+
 import { Logger, firebase, dbSnapshot } from "../../../utils";
+import { Events } from "../../utils/src/Constants";
 import { Message } from "../../structures";
 import { timezone } from "../../../config";
 import { Database } from "../../types";
 
-import Moment from "moment-timezone";
-
-export default async function(message: Message): Promise<void> {
+export const messageReceived = async (message: Message): Promise<void> => {
   const log = Logger(`Event:${Events.MESSAGE_RECEIVED}`);
 
   log.info(message.rawMessage());
@@ -45,4 +45,4 @@ export default async function(message: Message): Promise<void> {
         });
     }
   }
-}
+};

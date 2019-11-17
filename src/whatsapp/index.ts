@@ -1,9 +1,9 @@
-import os from "os";
 import isDocker from "is-docker";
+import os from "os";
 
-import { Client } from "./Client";
-import { firebase } from "../utils";
 import clientEventListeners from "./clientEventListeners";
+import { dbSnapshot } from "../utils";
+import { Client } from "./Client";
 
 enum chromeExecutablePathes {
   WINDOWS = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
@@ -30,14 +30,11 @@ export default async (headless = true): Promise<Client> => {
     headless
   };
 
-  const session = await firebase
-    .database()
-    .ref("session")
-    .once("value");
+  const db = await dbSnapshot();
 
   const client = new Client(puppeteerOptions);
 
-  await client.initialize(session.val());
+  await client.initialize(db.session);
 
   clientEventListeners(client);
 
