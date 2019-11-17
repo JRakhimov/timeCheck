@@ -3,7 +3,7 @@ import Moment from "moment-timezone";
 import { Logger, firebase, dbSnapshot } from "../../../utils";
 import { Events } from "../../utils/src/Constants";
 import { Message } from "../../structures";
-import { timezone } from "../../../config";
+import { timezone, answerTimeLimit } from "../../../config";
 import { Database } from "../../types";
 
 export const messageReceived = async (message: Message): Promise<void> => {
@@ -34,9 +34,9 @@ export const messageReceived = async (message: Message): Promise<void> => {
     const day = messageMoment.format("DD");
 
     const isAlreadyAnswered = db.statistics?.[month]?.[day]?.[time]?.[fromAccount]?.responseDate;
-    const differenceWithLastMessage = moment.diff(messageMoment, "minutes");
+    const differenceWithLastMessage = moment.diff(messageMoment, "seconds");
 
-    if (differenceWithLastMessage < 15 && isAlreadyAnswered == null) {
+    if (differenceWithLastMessage < answerTimeLimit && isAlreadyAnswered == null) {
       await firebase
         .database()
         .ref(ref)

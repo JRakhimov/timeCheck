@@ -2,12 +2,19 @@ import Moment from "moment-timezone";
 import { CronJob } from "cron";
 
 import { Client } from "./whatsapp/Client";
-import { Logger, firebase } from "./utils";
-import { timezone } from "./config";
+import { Logger, firebase, dbSnapshot } from "./utils";
+import { timezone, answerTimeLimit } from "./config";
+import { CronMessage } from "./whatsapp/types";
+import Telegraf, { ContextMessageUpdate } from "telegraf";
 
 const accountRegEx = /^[0-9]{0,}$/;
 
-export const cronJob = (whatsAppClient: Client, cronTime: string, messageText: string): CronJob => {
+export const cronJob = (
+  whatsAppClient: Client,
+  telegramClient: Telegraf<ContextMessageUpdate>,
+  cronTime: string,
+  messageText: string
+): CronJob => {
   const onTick = async (): Promise<void> => {
     const log = Logger("CronJob");
     const moment = Moment().tz(timezone);
@@ -18,11 +25,8 @@ export const cronJob = (whatsAppClient: Client, cronTime: string, messageText: s
       const isConnected = await whatsAppClient.isConnected();
 
       if (isConnected) {
-        const accounts: Array<string> = await firebase
-          .database()
-          .ref("accounts")
-          .once("value")
-          .then(x => Object.keys(x.val() || {}));
+        const db = await dbSnapshot();
+        const accounts = Object.keys(db.accounts || {});
 
         for (const account of accounts) {
           if (accountRegEx.test(account)) {
@@ -31,7 +35,7 @@ export const cronJob = (whatsAppClient: Client, cronTime: string, messageText: s
 
             if (res === "success") {
               const timestamp = new Date().getTime();
-              const promises = [
+              await Promise.all([
                 firebase
                   .database()
                   .ref(ref)
@@ -44,9 +48,26 @@ export const cronJob = (whatsAppClient: Client, cronTime: string, messageText: s
                   .set({
                     lastSentMessageDate: timestamp
                   })
-              ];
+              ]);
 
-              await Promise.all(promises);
+              setTimeout(async () => {
+                const cronMessage: CronMessage = await firebase
+                  .database()
+                  .ref(ref)
+                  .once("value")
+                  .then(x => x.val());
+
+                if (cronMessage.responseDate == null) {
+                  const admins = Object.values(db.telegramAdmins);
+                  const message = `No response for: ${moment.format("DD MMMM HH:mm")} from ${account}`;
+
+                  for (const chatID of admins) {
+                    telegramClient.telegram.sendMessage(chatID, message);
+                  }
+
+                  log.error(message);
+                }
+              }, answerTimeLimit * 1000);
             }
           }
         }

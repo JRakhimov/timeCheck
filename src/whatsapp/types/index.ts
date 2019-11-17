@@ -99,11 +99,11 @@ export type WAPI_STATE = {
   connectionState: Stream;
 };
 
-type Account = {
+export type Account = {
   lastSentMessageDate: number;
 };
 
-type CronMessage = {
+export type CronMessage = {
   sentDate: number;
   responseDate?: number;
 };

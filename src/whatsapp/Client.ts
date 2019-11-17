@@ -35,12 +35,12 @@ export class Client extends EventEmitter {
 
     if (this.pupBrowser) {
       log.info("Opening new page...");
-      this.pupPage = await this.pupBrowser.newPage();
+      const page = await this.pupBrowser.newPage();
 
-      this.pupPage.setUserAgent(Constants.USER_AGENT);
+      page.setUserAgent(Constants.USER_AGENT);
 
       if (session) {
-        await this.pupPage.evaluateOnNewDocument((session: Session) => {
+        await page.evaluateOnNewDocument((session: Session) => {
           window.localStorage.clear();
           window.localStorage.setItem("WASecretBundle", session.WASecretBundle);
           window.localStorage.setItem("WABrowserId", session.WABrowserId);
@@ -49,14 +49,14 @@ export class Client extends EventEmitter {
         }, session);
       }
 
-      await this.pupPage.goto(Constants.WHATSAPP_WEB_URL, { waitUntil: "networkidle0", timeout: 0 });
+      await page.goto(Constants.WHATSAPP_WEB_URL, { waitUntil: "networkidle0", timeout: 0 });
 
       log.info("Page opened </>");
 
       if (session) {
         // Check if session restore was successfull
         try {
-          await this.pupPage.waitForSelector(Constants.Selectors.PHONE_CONNECTED, { timeout: 5000 });
+          await page.waitForSelector(Constants.Selectors.PHONE_CONNECTED, { timeout: 5000 });
         } catch (err) {
           if (err.name === "TimeoutError") {
             if (this.retries === 3) {
@@ -73,19 +73,19 @@ export class Client extends EventEmitter {
         }
       } else {
         // Wait for QR Code
-        await this.pupPage.waitForSelector(Constants.Selectors.QR_CONTAINER);
+        await page.waitForSelector(Constants.Selectors.QR_CONTAINER);
 
-        const qr = await this.pupPage.$eval(Constants.Selectors.QR_VALUE, node => node.getAttribute("data-ref"));
+        const qr = await page.$eval(Constants.Selectors.QR_VALUE, node => node.getAttribute("data-ref"));
         this.emit(Constants.Events.QR_RECEIVED, qr);
 
         // Wait for code scan
-        await this.pupPage.waitForSelector(Constants.Selectors.PHONE_CONNECTED, { timeout: 0 });
+        await page.waitForSelector(Constants.Selectors.PHONE_CONNECTED, { timeout: 0 });
       }
 
-      await this.pupPage.addScriptTag({ path: require.resolve("moduleraid") });
-      await this.pupPage.evaluate(exposeStoreAndWAPI);
+      await page.addScriptTag({ path: require.resolve("moduleraid") });
+      await page.evaluate(exposeStoreAndWAPI);
 
-      const localStorage: Session = JSON.parse(await this.pupPage.evaluate(() => JSON.stringify(window.localStorage)));
+      const localStorage: Session = JSON.parse(await page.evaluate(() => JSON.stringify(window.localStorage)));
       const newSession: Session = {
         WASecretBundle: localStorage.WASecretBundle,
         WABrowserId: localStorage.WABrowserId,
@@ -95,15 +95,15 @@ export class Client extends EventEmitter {
 
       this.emit(Constants.Events.AUTHENTICATED, newSession);
 
-      await this.pupPage.exposeFunction("onAddMessageEvent", async (messageRaw: MessageRaw) => {
+      await page.exposeFunction("onAddMessageEvent", async (messageRaw: MessageRaw) => {
         if (messageRaw.id.fromMe || !messageRaw.isNewMsg) {
           return;
         }
 
-        this.pupPage && this.emit(Constants.Events.MESSAGE_RECEIVED, new Message(this.pupPage, messageRaw));
+        page && this.emit(Constants.Events.MESSAGE_RECEIVED, new Message(page, messageRaw));
       });
 
-      await this.pupPage.exposeFunction("onConnectionChangedEvent", async (_Constants, AppState: AppState) => {
+      await page.exposeFunction("onConnectionChangedEvent", async (_Constants, AppState: AppState) => {
         const { CONNECTION_STREAM, PAIRING_STATE } = _Constants;
         const { stream, state } = AppState;
 
@@ -112,7 +112,7 @@ export class Client extends EventEmitter {
         }
       });
 
-      await this.pupPage.evaluate(() => {
+      await page.evaluate(() => {
         // @ts-ignore
         const { PAIRING_STATE, CONNECTION_STREAM, AppState } = window.WAPI as WAPI;
 
@@ -128,6 +128,8 @@ export class Client extends EventEmitter {
       });
 
       this.emit(Constants.Events.READY);
+
+      this.pupPage = page;
     } else {
       throw new Error("Browser is not launched, please call initialize() first");
     }

@@ -1,4 +1,4 @@
-import Telegraf, { Composer, ContextMessageUpdate } from "telegraf";
+import Telegraf, { ContextMessageUpdate } from "telegraf";
 
 import { Client } from "../whatsapp/Client";
 import { token, env } from "../config";
@@ -8,7 +8,7 @@ import { isAdmin } from "./middlewares";
 import { start, status, regenerate } from "./contollers";
 import whatsAppClientEventListeners from "./whatsAppClientEventListeners";
 
-export default async (whatsAppClient: Client): Promise<Composer<ContextMessageUpdate>> => {
+export default async (whatsAppClient: Client): Promise<Telegraf<ContextMessageUpdate>> => {
   if (token) {
     const bot = new Telegraf(token, { telegram: { webhookReply: false } });
     const log = Logger("Telegram:Main");
