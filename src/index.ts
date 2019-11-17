@@ -7,7 +7,6 @@ const Main = async (): Promise<void> => {
   const telegramClient = await TelegramClient(whatsAppClient);
 
   const cron = await cronJob(whatsAppClient, telegramClient, "0 */2 * * * *", "Cron test");
-  // cron.stop();
   cron.start();
 };
 

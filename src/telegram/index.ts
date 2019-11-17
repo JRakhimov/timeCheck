@@ -1,7 +1,7 @@
 import Telegraf, { ContextMessageUpdate } from "telegraf";
 
 import { Client } from "../whatsapp/Client";
-import { token, env } from "../config";
+import { token, host } from "../config";
 import { Logger } from "../utils";
 
 import { isAdmin } from "./middlewares";
@@ -20,11 +20,18 @@ export default async (whatsAppClient: Client): Promise<Telegraf<ContextMessageUp
 
     whatsAppClientEventListeners(whatsAppClient, bot);
 
-    if (env === "development") {
+    if (host != null) {
+      const hookPath = `${host}/${token}`;
+
+      await bot.stop();
+      await bot.telegram.setWebhook(hookPath);
+      await bot.startWebhook(hookPath);
+      log.info(`.::Telegram client launched via Webhooks::.`);
+    } else {
+      await bot.stop();
       await bot.telegram.deleteWebhook();
       await bot.startPolling();
-
-      log.info(".::Telegram client started via Polling::.");
+      log.info(".::Telegram client launched via Polling::.");
     }
 
     return bot;

@@ -6,6 +6,8 @@ services:
     build: .
     environment:
       - TOKEN=476636678:AAEUsDFZI_qmhftx1L0PjIxoD0M3EzzZI18
+      - HOST=https://60941de0.ngrok.io
+      - TIMEZONE=Asia/Tashkent
       - ENV=development
       - PORT=3000
     ports:
