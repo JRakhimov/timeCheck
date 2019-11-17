@@ -1,3 +1,7 @@
+import root from "app-root-path";
+import path from "path";
+import fs from "fs";
+
 import Telegraf, { ContextMessageUpdate } from "telegraf";
 import { firebase, dbSnapshot } from "../../../utils";
 
@@ -5,6 +9,8 @@ export const authenticated = (telegramClient: Telegraf<ContextMessageUpdate>) =>
   const db = await dbSnapshot();
   const admins = Object.values(db?.telegramAdmins || {});
   const telegramMessages = db?.qrCode?.messages;
+
+  fs.unlinkSync(path.join(root.toString(), "./resources/qr.png"));
 
   await firebase
     .database()
