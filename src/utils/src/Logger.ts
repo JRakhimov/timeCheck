@@ -4,7 +4,7 @@ import log4js from "log4js";
 log4js.configure({
   appenders: {
     toFile: {
-      maxLogSize: 10 * 1024 * 1024, // = 10Mb
+      maxLogSize: 3 * 1024 * 1024, // = 10Mb
       filename: `${appRoot}/logs/app.log`,
       encoding: "utf-8",
       compress: true,
