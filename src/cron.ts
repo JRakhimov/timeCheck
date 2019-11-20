@@ -1,5 +1,5 @@
 import Moment from "moment-timezone";
-import { CronJob } from "cron";
+import { CronJob, CronTime } from "cron";
 
 import { Client } from "./whatsapp/Client";
 import { Logger, firebase, dbSnapshot } from "./utils";
@@ -71,9 +71,15 @@ export const cronJob = (
             }
           }
         }
+      } else {
+        log.error("Page is not connected to the server, try regenerate new QR code.");
       }
+    } else {
+      log.error("Page is not initialized properly, try regenerate new QR code.");
     }
   };
 
   return new CronJob(cronTime, onTick, undefined, false, timezone);
 };
+
+export { CronTime };
