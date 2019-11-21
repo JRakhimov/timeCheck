@@ -19,18 +19,11 @@ export const cronJob = (
     const log = Logger("CronJob");
     const moment = Moment().tz(timezone);
 
-    const sendMessageToAdmins = async (admins: Array<number>, message: string): Promise<void> => {
-      for (const chatID of admins) {
-        await telegramClient.telegram.sendMessage(chatID, message).catch(error => log.error(error));
-      }
-    };
-
     if (whatsAppClient.pupPage) {
       log.info(`CronJob started: ${moment.format()}`);
 
       const isConnected = await whatsAppClient.isConnected();
       const db = await dbSnapshot();
-      const admins = Object.values(db.telegramAdmins || {});
 
       if (isConnected) {
         const accounts = Object.keys(db.accounts || {});
@@ -66,8 +59,11 @@ export const cronJob = (
 
                 if (cronMessage.responseDate == null) {
                   const message = `No response for: ${moment.format("DD MMMM HH:mm")} from ${account}`;
+                  const admins = Object.values(db.telegramAdmins || {});
 
-                  sendMessageToAdmins(admins, message);
+                  for (const chatID of admins) {
+                    await telegramClient.telegram.sendMessage(chatID, message).catch(error => log.error(error));
+                  }
 
                   log.error(message);
                 }
@@ -76,11 +72,7 @@ export const cronJob = (
           }
         }
       } else {
-        const message = `App is not connected to the server, try regenerate new QR code by command /regenerate`;
-
-        sendMessageToAdmins(admins, message);
-
-        log.error(message);
+        log.error("App is not connected to the server, try regenerate new QR code by command /regenerate");
       }
     } else {
       log.error("Page is not initialized properly, try regenerate new QR code.");

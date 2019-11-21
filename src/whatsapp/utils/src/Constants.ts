@@ -20,6 +20,7 @@ export enum Events {
   AUTHENTICATION_FAILURE = "auth_failure",
   AUTHENTICATED = "authenticated",
   DISCONNECTED = "disconnected",
+  IS_CONNECTED = "is_connected",
   MESSAGE_RECEIVED = "message",
   QR_RECEIVED = "qr",
   READY = "ready"

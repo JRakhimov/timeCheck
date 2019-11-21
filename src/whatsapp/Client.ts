@@ -193,7 +193,11 @@ export class Client extends EventEmitter {
   async isConnected(): Promise<boolean> {
     if (this.pupPage && this.pupBrowser) {
       // @ts-ignore
-      return this.pupPage.evaluate(() => (window.WAPI as WAPI).isConnected());
+      const isConnected = this.pupPage.evaluate(() => (window.WAPI as WAPI).isConnected());
+
+      this.emit(Constants.Events.IS_CONNECTED, isConnected);
+
+      return isConnected;
     } else {
       throw new Error("Browser or page is not launched, please call initialize() first");
     }

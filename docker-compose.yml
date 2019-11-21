@@ -6,7 +6,7 @@ services:
     build: .
     environment:
       - TOKEN=476636678:AAEUsDFZI_qmhftx1L0PjIxoD0M3EzzZI18
-      - HOST=https://60941de0.ngrok.io
+      # - HOST=https://60941de0.ngrok.io
       - TIMEZONE=Asia/Tashkent
       - PORT=3000
       - CRON_ONE_TIME="0 15 9 * * *"
