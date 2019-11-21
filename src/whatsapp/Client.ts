@@ -79,9 +79,10 @@ export class Client extends EventEmitter {
             return;
           }
 
-          await this.closePage(false);
-          await this.newPage();
           this.retries += 1;
+
+          await this.closePage(false);
+          await this.newPage(session);
 
           return;
         }
@@ -96,7 +97,17 @@ export class Client extends EventEmitter {
       this.emit(Constants.Events.QR_RECEIVED, qr);
 
       // Wait for code scan
-      await page.waitForSelector(Constants.Selectors.PHONE_CONNECTED, { timeout: 0 });
+      try {
+        await page.waitForSelector(Constants.Selectors.PHONE_CONNECTED, { timeout: 0 });
+      } catch (error) {
+        const err: Error = error;
+
+        if (err.message.includes("Target closed.")) {
+          return;
+        }
+
+        throw new Error(error);
+      }
     }
 
     await page.addScriptTag({ path: require.resolve("moduleraid") });
@@ -156,13 +167,7 @@ export class Client extends EventEmitter {
           await page.evaluate(() => window.localStorage.clear());
         }
 
-        try {
-          await page.close();
-        } catch (error) {
-          if (error.name !== "Target closed") {
-            throw new Error(error);
-          }
-        }
+        await page.close();
       }
     };
 
@@ -193,7 +198,7 @@ export class Client extends EventEmitter {
   async isConnected(): Promise<boolean> {
     if (this.pupPage && this.pupBrowser) {
       // @ts-ignore
-      const isConnected = this.pupPage.evaluate(() => (window.WAPI as WAPI).isConnected());
+      const isConnected = await this.pupPage.evaluate(() => (window.WAPI as WAPI).isConnected());
 
       this.emit(Constants.Events.IS_CONNECTED, isConnected);
 

@@ -6,6 +6,6 @@ export const authFailure = (telegramClient: Telegraf<ContextMessageUpdate>) => a
   const admins = Object.values(db?.telegramAdmins || {});
 
   for (const admin of admins) {
-    await telegramClient.telegram.sendMessage(admin, "Cannot restore previous session, please regenerate new QR code.");
+    await telegramClient.telegram.sendMessage(admin, "Cannot restore previous session, please scan new QR code.");
   }
 };
