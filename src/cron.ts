@@ -58,7 +58,7 @@ export const cronJob = (
                   .then(x => x.val());
 
                 if (cronMessage.responseDate == null) {
-                  const admins = Object.values(db.telegramAdmins);
+                  const admins = Object.values(db.telegramAdmins || {});
                   const message = `No response for: ${moment.format("DD MMMM HH:mm")} from ${account}`;
 
                   for (const chatID of admins) {

@@ -9,8 +9,8 @@ const Main = async (): Promise<void> => {
   const whatsAppClient = await WhatsAppClient(true);
   const telegramClient = await TelegramClient(whatsAppClient);
 
-  const cronOne = await cronJob(whatsAppClient, telegramClient, "0 51 11 * * *", "Cron test");
-  const cronTwo = await cronJob(whatsAppClient, telegramClient, "0 40 11 * * *", "Cron test");
+  const cronOne = await cronJob(whatsAppClient, telegramClient, "0 15 9 * * *", "Cron test");
+  const cronTwo = await cronJob(whatsAppClient, telegramClient, "0 30 9 * * *", "Cron test");
 
   cronOne.start();
   cronTwo.start();

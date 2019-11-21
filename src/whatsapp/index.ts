@@ -34,7 +34,7 @@ export default async (headless = true): Promise<Client> => {
 
   const client = new Client(puppeteerOptions);
 
-  await client.initialize(db.session);
+  await client.initialize(db?.session);
 
   clientEventListeners(client);
 

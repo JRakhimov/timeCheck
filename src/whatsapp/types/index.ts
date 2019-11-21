@@ -109,8 +109,8 @@ export type CronMessage = {
 };
 
 export interface Database {
-  session: Session;
-  telegramAdmins: {
+  session?: Session;
+  telegramAdmins?: {
     [key: string]: number;
   };
   qrCode?: {
@@ -122,7 +122,7 @@ export interface Database {
   accounts: {
     [key: string]: Account;
   };
-  statistics: {
+  statistics?: {
     [key: string]: {
       [key: string]: {
         [key: string]: {
