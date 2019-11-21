@@ -3,7 +3,7 @@ import { LaunchOptions } from "puppeteer-core";
 export const WHATSAPP_WEB_URL = "https://web.whatsapp.com/";
 
 export const USER_AGENT =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.109 Safari/537.36";
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36";
 
 export const DefaultOptions: LaunchOptions = {
   headless: true
