@@ -8,8 +8,11 @@ services:
       - TOKEN=476636678:AAEUsDFZI_qmhftx1L0PjIxoD0M3EzzZI18
       - HOST=https://60941de0.ngrok.io
       - TIMEZONE=Asia/Tashkent
-      - ENV=development
       - PORT=3000
+      - CRON_ONE_TIME="0 15 9 * * *"
+      - CRON_TWO_TIME="0 30 9 * * *" # Set random time but later than CRON_ONE_TIME
+      - CRON_MESSAGE_TEXT="Cron test"
+
     ports:
       - 3000:3000
     restart: always
