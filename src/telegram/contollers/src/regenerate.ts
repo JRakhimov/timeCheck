@@ -5,5 +5,5 @@ export const regenerate = (whatsAppClient: Client) => async (ctx: ContextMessage
   await ctx.reply("Regenerating new QR code...");
 
   await whatsAppClient.closePage(true);
-  whatsAppClient.newPage();
+  await whatsAppClient.newPage();
 };

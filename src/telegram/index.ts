@@ -5,7 +5,7 @@ import { token, host, port } from "../config";
 import { Logger } from "../utils";
 
 import { isAdmin } from "./middlewares";
-import { start, status, regenerate } from "./contollers";
+import { start, status, regenerate, callTheMall } from "./contollers";
 import whatsAppClientEventListeners from "./whatsAppClientEventListeners";
 
 export default async (whatsAppClient: Client): Promise<Telegraf<ContextMessageUpdate>> => {
@@ -17,6 +17,8 @@ export default async (whatsAppClient: Client): Promise<Telegraf<ContextMessageUp
     bot.start(start);
     bot.command("status", status(whatsAppClient));
     bot.command("regenerate", regenerate(whatsAppClient));
+    bot.command("callthemall", callTheMall(whatsAppClient));
+    bot.use(start); // If command not found, bot will send start message
 
     whatsAppClientEventListeners(whatsAppClient, bot);
 

@@ -1,4 +1,4 @@
-import { timezone, cronOneTime, cronTwoTime, cronMessageText } from "./config";
+import { timezone, cronOneTime, cronTwoTime } from "./config";
 import { Logger, randomIntInclusive } from "./utils";
 import { cronJob, CronTime } from "./cron";
 import WhatsAppClient from "./whatsapp";
@@ -9,8 +9,8 @@ const Main = async (): Promise<void> => {
   const whatsAppClient = await WhatsAppClient();
   const telegramClient = await TelegramClient(whatsAppClient);
 
-  const cronOne = await cronJob(whatsAppClient, telegramClient, cronOneTime, cronMessageText);
-  const cronTwo = await cronJob(whatsAppClient, telegramClient, cronTwoTime, cronMessageText);
+  const cronOne = await cronJob(whatsAppClient, telegramClient, cronOneTime);
+  const cronTwo = await cronJob(whatsAppClient, telegramClient, cronTwoTime);
 
   cronOne.start();
   cronTwo.start();
