@@ -25,8 +25,4 @@ const Main = async (): Promise<void> => {
   });
 };
 
-try {
-  Main();
-} catch (error) {
-  console.log(error);
-}
+Main().catch(error => console.log(error));

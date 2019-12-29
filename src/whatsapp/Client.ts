@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
 import EventEmitter from "events";
-import puppeteer, { LaunchOptions, Browser, Page } from "puppeteer-core";
+import puppeteer, { Browser, LaunchOptions, Page } from "puppeteer-core";
 
 import { Logger } from "../utils";
 import { Constants, exposeStoreAndWAPI } from "./utils";
 
-import { Session, MessageRaw, WAPI, AppState } from "./types";
+import { AppState, MessageRaw, Session, WAPI } from "./types";
 import { Message } from "./structures";
 
 export class Client extends EventEmitter {
@@ -33,9 +33,7 @@ export class Client extends EventEmitter {
   async newPageWithNewContext(): Promise<Page> {
     if (this.pupBrowser) {
       const context = await this.pupBrowser.createIncognitoBrowserContext();
-      const page = await context.newPage();
-
-      return page;
+      return await context.newPage();
     }
 
     throw new Error("Browser is not launched, please call initialize() first");
@@ -64,7 +62,7 @@ export class Client extends EventEmitter {
     log.info("Page opened </>");
 
     if (session) {
-      // Check if session restore was successfull
+      // Check if session restore was successful
       try {
         await page.waitForSelector(Constants.Selectors.PHONE_CONNECTED, { timeout: 5000 });
       } catch (err) {
@@ -80,6 +78,7 @@ export class Client extends EventEmitter {
           }
 
           this.retries += 1;
+          log.info(`Trying to restore the session: ${this.retries}`);
 
           await this.closePage(false);
           await this.newPage(session);
@@ -94,6 +93,20 @@ export class Client extends EventEmitter {
       await page.waitForSelector(Constants.Selectors.QR_CONTAINER);
 
       const qr = await page.$eval(Constants.Selectors.QR_VALUE, node => node.getAttribute("data-ref"));
+
+      if (qr == null) {
+        await page.close();
+
+        try {
+          await this.closePage(true);
+          await this.newPage();
+        } catch (error) {
+          log.error(error);
+        }
+
+        return;
+      }
+
       this.emit(Constants.Events.QR_RECEIVED, qr);
 
       // Wait for code scan
@@ -136,7 +149,17 @@ export class Client extends EventEmitter {
       const { stream, state } = AppState;
 
       if (stream === CONNECTION_STREAM.DISCONNECTED || state === PAIRING_STATE.DISCONNECTED) {
-        this.emit(Constants.Events.DISCONNECTED, { stream, state });
+        if (this.retries === 0) {
+          await this.closePage(false);
+          await this.newPage(session);
+        }
+
+        this.retries++;
+
+        if (this.retries > 0) {
+          this.emit(Constants.Events.DISCONNECTED, { stream, state });
+          this.retries = 0;
+        }
       }
     });
 
@@ -161,6 +184,10 @@ export class Client extends EventEmitter {
   }
 
   async closePage(removeSession: boolean): Promise<void> {
+    const log = Logger("Client:Page");
+
+    log.info(`Closing page... removeSession: ${removeSession}`);
+
     const close = async (page: Page): Promise<void> => {
       if (page && !page.isClosed()) {
         if (removeSession) {
@@ -171,6 +198,7 @@ export class Client extends EventEmitter {
       }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const pages = (await this.pupBrowser?.pages()) || [];
 
     for (const page of pages) {
@@ -186,7 +214,23 @@ export class Client extends EventEmitter {
     if (this.pupPage) {
       return this.pupPage.evaluate(
         // @ts-ignore
-        (chatID, message) => Store.sendTextMsgToChat(Store.Chat.get(chatID), message),
+        (chatID, message) => {
+          // @ts-ignore
+          const chat = Store.Chat.get(chatID);
+
+          if (chat != null) {
+            // @ts-ignore
+            Store.sendTextMsgToChat(chat, message);
+            return;
+          }
+
+          // @ts-ignore
+          const recentChat = Store.Chat.models[0];
+          // @ts-ignore
+          recentChat.id = new Store.UserConstructor(chatID, { intentionallyUsePrivateConstructor: true });
+          // @ts-ignore
+          Store.sendTextMsgToChat(recentChat, message);
+        },
         chatID,
         message
       );

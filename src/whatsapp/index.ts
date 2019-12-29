@@ -5,7 +5,7 @@ import clientEventListeners from "./clientEventListeners";
 import { dbSnapshot } from "../utils";
 import { Client } from "./Client";
 
-enum chromeExecutablePathes {
+enum chromeExecutablePaths {
   WINDOWS = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
   OSX = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
   LINUX = "/usr/bin/google-chrome-unstable",
@@ -15,14 +15,14 @@ enum chromeExecutablePathes {
 export default async (headless = true): Promise<Client> => {
   const osType = os.type();
 
-  const executablePath: chromeExecutablePathes =
+  const executablePath: chromeExecutablePaths =
     osType === "Darwin"
-      ? chromeExecutablePathes.OSX
+      ? chromeExecutablePaths.OSX
       : osType === "Windows_NT"
-      ? chromeExecutablePathes.WINDOWS
+      ? chromeExecutablePaths.WINDOWS
       : osType === "Linux" && isDocker()
-      ? chromeExecutablePathes.DOCKER_LINUX
-      : chromeExecutablePathes.LINUX;
+      ? chromeExecutablePaths.DOCKER_LINUX
+      : chromeExecutablePaths.LINUX;
 
   const puppeteerOptions = {
     args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
